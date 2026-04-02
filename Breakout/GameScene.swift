@@ -8,16 +8,27 @@
 import SpriteKit
 import GameplayKit
 
+
+//var playLable = SKLabelNode()
+//var livesLabel = SKLabelNode()
+//var scoreLabel = SKLabelNode()
+//var playingGame = false
+//var score = 0
+//var lives = 3
+
 var ball = SKShapeNode()
 var paddle = SKSpriteNode()
 var brick = SKSpriteNode()
 var loseZone = SKSpriteNode()
-class GameScene: SKScene {
+class GameScene: SKScene, SKPhysicsContactDelegate {
    
     override func didMove(to view: SKView) {
         // this stuff happens once (when the app opens)
+        physicsWorld.contactDelegate = self
+        self.physicsBody = SKPhysicsBody(edgeLoopFrom: frame)
         createBackground()
         resetGame()
+        kickBall()
     }
     
     func resetGame() {
@@ -28,6 +39,10 @@ class GameScene: SKScene {
         makeLoseZone()
     }
     
+    func kickBall() {
+        ball.physicsBody?.isDynamic = true
+        ball.physicsBody?.applyImpulse(CGVector(dx: 3, dy: 5))
+    }
     func createBackground() {
         let stars = SKTexture(imageNamed: "Stars")
         for i in 0...1 {
