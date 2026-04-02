@@ -43,6 +43,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
+    func didBegin(_ contact: SKPhysicsContact) {
+        if contact.bodyA.node?.name == "brick" ||
+            contact.bodyB.node?.name == "brick" {
+            print("You win!")
+            brick.removeFromParent()
+            ball.removeFromParent()
+        }
+        if contact.bodyA.node?.name == "loseZone" ||
+            contact.bodyB.node?.name == "loseZone" {
+            print("You lose!")
+            ball.removeFromParent()
+        }
+            
+    }
+    
     func resetGame() {
         // this stuff happens before each game starts
         makeBall()
@@ -100,7 +115,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func makePaddle() {
         paddle.removeFromParent() // remove the paddle, if it exist
         paddle = SKSpriteNode(color: .white, size: CGSize(width: frame.width/4, height: 20))
-        paddle.position = CGPoint(x: frame.midX, y:frame.midY + 125)
+        paddle.position = CGPoint(x: frame.midX, y:frame.minY + 125)
         paddle.name = "paddle"
         paddle.physicsBody = SKPhysicsBody(rectangleOf: paddle.size)
         paddle.physicsBody?.isDynamic = false
