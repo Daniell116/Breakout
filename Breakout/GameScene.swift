@@ -8,40 +8,60 @@
 import SpriteKit
 import GameplayKit
 
-
-//var playLable = SKLabelNode()
-//var livesLabel = SKLabelNode()
-//var scoreLabel = SKLabelNode()
-//var playingGame = false
-//var score = 0
-//var lives = 3
-
+var playLable = SKLabelNode()
+var livesLabel = SKLabelNode()
+var scoreLabel = SKLabelNode()
+var playingGame = false
+var score = 0
+var lives = 3
 var ball = SKShapeNode()
 var paddle = SKSpriteNode()
 var brick = SKSpriteNode()
 var loseZone = SKSpriteNode()
 class GameScene: SKScene, SKPhysicsContactDelegate {
-   
+    
     override func didMove(to view: SKView) {
         // this stuff happens once (when the app opens)
         physicsWorld.contactDelegate = self
         self.physicsBody = SKPhysicsBody(edgeLoopFrom: frame)
         createBackground()
         resetGame()
-        kickBall()
+        makeLoseZone()
+        makeLabels()
+        
     }
-    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        for touch in touches {
-            let location = touch.location(in: self)
-            paddle.position.x = location.x
-        }
-    }
+    
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
         for touch in touches {
             let location = touch.location(in: self)
-            paddle.position.x = location.x
+            if playingGame {
+                paddle.position.x = location.x
+            }
         }
     }
+    
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        for touch in touches {
+            let location = touch.location(in: self)
+            if playingGame {
+                paddle.position.x = location.x
+            }
+            else {
+                for node in nodes(at: location) {
+                    if node.name == "playLabel" {
+                        playingGame = true
+                        node.alpha = 0
+                        score = 0
+                        lives = 3
+                        updateLabels()
+                       kickBall()
+                    }
+                }
+            }
+        }
+    }
+    
+
     
     func didBegin(_ contact: SKPhysicsContact) {
         if contact.bodyA.node?.name == "brick" ||
@@ -57,6 +77,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
             
     }
+   
+    
+    
     
     func resetGame() {
         // this stuff happens before each game starts
@@ -64,11 +87,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         makePaddle()
         makeBrick()
         makeLoseZone()
+        updateLabels()
     }
     
     func kickBall() {
         ball.physicsBody?.isDynamic = true
         ball.physicsBody?.applyImpulse(CGVector(dx: 3, dy: 5))
+    }
+    
+    func updateLabels() {
+        scoreLabel.text = "Score: \(score)"
+        livesLabel.text = "Lives: \(lives)"
     }
     func createBackground() {
         let stars = SKTexture(imageNamed: "Stars")
@@ -141,5 +170,24 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         addChild(loseZone)
     }
     
-    
+    func makeLabels() {
+        playLable.fontSize = 24
+        playLable.text = "Tap to start"
+        playLable.fontName = "Arial"
+        playLable.position = CGPoint(x: frame.midX, y: frame.midY - 50)
+        playLable.name = "playLable"
+        addChild(playLable)
+        
+        livesLabel.fontSize = 18
+        livesLabel.fontColor = .black
+        livesLabel.fontName = "Arial"
+        livesLabel.position = CGPoint(x: frame.minX + 50, y: frame.minY + 18)
+        addChild(livesLabel)
+        
+        scoreLabel.fontSize = 18
+        scoreLabel.fontColor = .black
+        scoreLabel.fontName = "Arial"
+        scoreLabel.position = CGPoint(x: frame.maxX - 50, y: frame.minY + 18)
+        addChild(scoreLabel)
+    }
 }
