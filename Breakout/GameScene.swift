@@ -8,16 +8,17 @@
 import SpriteKit
 import GameplayKit
 
+
+var ball = SKShapeNode()
+var paddle = SKSpriteNode()
+var brick = SKSpriteNode()
+var loseZone = SKSpriteNode()
 var playLable = SKLabelNode()
 var livesLabel = SKLabelNode()
 var scoreLabel = SKLabelNode()
 var playingGame = false
 var score = 0
 var lives = 3
-var ball = SKShapeNode()
-var paddle = SKSpriteNode()
-var brick = SKSpriteNode()
-var loseZone = SKSpriteNode()
 class GameScene: SKScene, SKPhysicsContactDelegate {
     
     override func didMove(to view: SKView) {
@@ -54,32 +55,23 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                         score = 0
                         lives = 3
                         updateLabels()
-                       kickBall()
+                        kickBall()
                     }
                 }
             }
         }
     }
     
-
-    
     func didBegin(_ contact: SKPhysicsContact) {
         if contact.bodyA.node?.name == "brick" ||
             contact.bodyB.node?.name == "brick" {
-            print("You win!")
-            brick.removeFromParent()
-            ball.removeFromParent()
+            gameOver(winner: true)
         }
         if contact.bodyA.node?.name == "loseZone" ||
             contact.bodyB.node?.name == "loseZone" {
-            print("You lose!")
-            ball.removeFromParent()
+            gameOver(winner: false)
         }
-            
     }
-   
-    
-    
     
     func resetGame() {
         // this stuff happens before each game starts
@@ -175,7 +167,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         playLable.text = "Tap to start"
         playLable.fontName = "Arial"
         playLable.position = CGPoint(x: frame.midX, y: frame.midY - 50)
-        playLable.name = "playLable"
+        playLable.name = "playLabel"
         addChild(playLable)
         
         livesLabel.fontSize = 18
@@ -189,5 +181,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         scoreLabel.fontName = "Arial"
         scoreLabel.position = CGPoint(x: frame.maxX - 50, y: frame.minY + 18)
         addChild(scoreLabel)
+    }
+    
+    func gameOver(winner: Bool) {
+        playingGame = false
+        playLable.alpha = 1
+        if winner {
+            playLable.text = "You Win!"
+        } else {
+            playLable.text = "You Lose!"
+        }
     }
 }
