@@ -8,94 +8,28 @@
 import SpriteKit
 import GameplayKit
 
-var ball = SKShapeNode()
-var paddle = SKSpriteNode()
-var bricks = [SKSpriteNode]()
-var loseZone = SKSpriteNode()
-var playLable = SKLabelNode()
-var livesLabel = SKLabelNode()
-var scoreLabel = SKLabelNode()
-var playingGame = false
-var score = 0
-var lives = 3
-var removedBricks = 0
+
 class GameScene: SKScene, SKPhysicsContactDelegate {
+    var ball = SKShapeNode()
+    var paddle = SKSpriteNode()
+    var bricks = [SKSpriteNode()]
+    var loseZone = SKSpriteNode()
+    var playLable = SKLabelNode()
+    var livesLabel = SKLabelNode()
+    var scoreLabel = SKLabelNode()
+    var playingGame = false
+    var score = 0
+    var lives = 3
+    var removedBricks = 0
     
     override func didMove(to view: SKView) {
         // this stuff happens once (when the app opens)
         physicsWorld.contactDelegate = self
         self.physicsBody = SKPhysicsBody(edgeLoopFrom: frame)
         createBackground()
-        resetGame()
         makeLoseZone()
         makeLabels()
-        
-    }
-    
-    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-        for touch in touches {
-            let location = touch.location(in: self)
-            if playingGame {
-                paddle.position.x = location.x
-            }
-        }
-    }
-    
-    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        for touch in touches {
-            let location = touch.location(in: self)
-            if playingGame {
-                paddle.position.x = location.x
-            }
-            else {
-                for node in nodes(at: location) {
-                    if node.name == "playLabel" {
-                        playingGame = true
-                        node.alpha = 0
-                        score = 0
-                        lives = 3
-                        updateLabels()
-                        kickBall()
-                    }
-                }
-            }
-        }
-    }
-    
-    func didBegin(_ contact: SKPhysicsContact) {
-        // ask each brick "Is It You?"
-        for brick in bricks {
-            if contact.bodyA.node == brick ||
-                contact.bodyB.node == brick {
-                score += 1
-                updateLabels()
-                if brick.color == .blue {
-                    brick.color = .orange
-                }
-                else if brick.color == .orange {
-                    brick.color = .green
-                }
-                else {
-                    brick.removeFromParent()
-                    removedBricks += 1
-                    if removedBricks == bricks.count {
-                        gameOver(winner: true)
-                    }
-                }
-            }
-        }
-        if contact.bodyA.node == loseZone ||
-            contact.bodyB.node == loseZone {
-            lives -= 1
-            if lives > 0 {
-                score = 0
-                resetGame()
-                kickBall()
-            }
-            else {
-                gameOver(winner: false)
-            }
-        }
+        resetGame()
     }
     
     func resetGame() {
@@ -103,13 +37,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         makeBall()
         makePaddle()
         makeBricks()
-        makeLoseZone()
         updateLabels()
     }
     
     func kickBall() {
         ball.physicsBody?.isDynamic = true
-        ball.physicsBody?.applyImpulse(CGVector(dx: 3, dy: 5))
+        ball.physicsBody?.applyImpulse(CGVector(dx: Int.random (in: -5...5), dy: 5))
     }
     
     func updateLabels() {
@@ -230,13 +163,92 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         addChild(scoreLabel)
     }
     
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        for touch in touches {
+            let location = touch.location(in: self)
+            if playingGame {
+                paddle.position.x = location.x
+            }
+            else {
+                for node in nodes(at: location) {
+                    if node.name == "playLabel" {
+                        playingGame = true
+                        node.alpha = 0
+                        score = 0
+                        lives = 3
+                        updateLabels()
+                        kickBall()
+                    }
+                }
+            }
+        }
+    }
+    
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        for touch in touches {
+            let location = touch.location(in: self)
+            if playingGame {
+                paddle.position.x = location.x
+            }
+        }
+    }
+    
+    func didBegin(_ contact: SKPhysicsContact) {
+        // ask each brick "Is It You?"
+        for brick in bricks {
+            if contact.bodyA.node == brick ||
+                contact.bodyB.node == brick {
+                score += 1
+                ball.physicsBody!.velocity.dx *= CGFloat(1.02)
+                ball.physicsBody!.velocity.dy *= CGFloat(1.02)
+                updateLabels()
+                if brick.color == .blue {
+                    brick.color = .orange // blue bricks turn orange
+                }
+                else if brick.color == .orange {
+                    brick.color = .green // orange bricks turn green
+                }
+                else { // must be a green brick, wich get removed
+                    brick.removeFromParent()
+                    removedBricks += 1
+                    if removedBricks == bricks.count {
+                        gameOver(winner: true)
+                    }
+                }
+            }
+        }
+        if contact.bodyA.node?.name == "loseZone" ||
+            contact.bodyB.node?.name == "loseZone" {
+            lives -= 1
+            if lives > 0 {
+                score = 0
+               resetGame()
+                kickBall()
+            }
+            else {
+                gameOver(winner: false)
+            }
+        }
+    }
     func gameOver(winner: Bool) {
         playingGame = false
         playLable.alpha = 1
+        resetGame()
         if winner {
-            playLable.text = "You Win!"
+            playLable.text = "You Win! Tap to play again"
         } else {
-            playLable.text = "You Lose!"
+            playLable.text = "You Lose! Tap to play again"
+        }
+    }
+    
+    override func update(_ currentTime: TimeInterval) {
+        if abs(ball.physicsBody!.velocity.dx) < 100 {
+            // ball has stalled in x dirrection, so kick it randomly horizontally
+            ball.physicsBody?.applyImpulse(CGVector(dx: Int.random(in: -3...3), dy: 0))
+        }
+        if abs(ball.physicsBody!.velocity.dy) < 100 {
+            // ball has stalled in the y dirrection, so kick it randomly vertically
+            ball.physicsBody?.applyImpulse(CGVector(dx: 0, dy: Int.random(in: -3...3)))
         }
     }
 }
